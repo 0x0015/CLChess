@@ -4,10 +4,10 @@
 #include <unordered_map>
 #include <tuple>
 #include <vector>
-struct boardstate{
-	uint8_t pieceType;
-	uint8_t xpos;
-	uint8_t ypos;
+struct boardstate{//TODO: check on these bitfields
+	uint8_t pieceType: 4;//0pnbrqkPNBRQK
+	uint8_t xpos: 4;
+	uint8_t ypos: 4;
 };
 
 class Board{

@@ -12,7 +12,9 @@ public:
 	std::string kernel1;
 	std::string kernel2;
 	unsigned int numElements;
+	unsigned int maxCPUSearch = 1;
 	std::shared_ptr<cl::Program> SearchProgram;
+	std::vector<boardstate*> cpuSearch(boardstate* currentBoardstate, unsigned int currentSearchDepth);
 	Search();
 	~Search();
 	bool infinite;

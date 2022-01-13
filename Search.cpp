@@ -52,7 +52,86 @@ Search::~Search(){
 
 }
 
+uint8_t checkSquareEmpty(const boardstate* currentBoardstate, uint8_t xpos, uint8_t ypos){//0 = true, 1 = black, 2 = white, 3 = off the board on x axes, 4 = off the board on y axes
+	if(xpos > 8 || xpos < 1){
+		return(3);
+	}
+	if(ypos > 8 || ypos < 1){
+		return(4);
+	}
+	for(int i=0;i<32;i++){
+		if(currentBoardstate[i].xpos == xpos && currentBoardstate[i].ypos == ypos)
+			if(currentBoardstate[i].pieceType > 0 && currentBoardstate[i].pieceType <= 6){
+				return(1);
+			}else if(currentBoardstate[i].pieceType >= 7){
+				return(2);
+			}
+	}
+	return(0);
+}
+
+boardstate* copyBoardstate(const baordstate* currentBoardstate){
+	boardstate* newBoardstate = new boardstate[32];
+	std::memcpy(newBoardstate, currentBoardstate, sizeof(boardstate) * 32);
+	return(newBoardstate);
+}
+
+std::optional<std::vector<boardstate*>> cpuSearchR(const boardstate* currentBoardstate, unsigned int currentSearchDepth){//Can't be used for an actual search due to it saving boardstates in memory
+	std::vector<boardstate*> output;
+	if(currentSearchDepth > maxCPUSearch){
+		return(output);
+	}
+	for(int i=0;i<32;i++){
+		uint8_t pieceType = currentBoardstate[i].pieceType;
+		if(pieceType == 0){
+			continue;
+		}
+		uint8_t xpos = currentBoardstate[i].xpos;
+		uint8_t ypos = currentBoardstate[i].ypos;
+		switch(pieceType){
+			case 1:{//b pawn
+				if(checkSquareEmpty(currentBoardstate, xpos, ypos+1) == 0){
+					{
+						boardstate* tempBoardstate = copyBoardstate(currentBoardstate);
+						tempBoardstate[i].ypos++;
+						output.push_back(tempBoardstate);
+					}
+					if(checkSquareEmpty(currentBoardstate, xpos, ypos+2) == 0){
+						boardstate* tempBoardstate = copyBoardstate(currentBoardstate);
+						tempBoardstate[i].ypos+=2;
+						output.push_back(tempBoardstate);
+					}
+				}
+				if(checkSquareEmpty(currentBoardstate, xpos+1, ypos
+			}
+			case 2://b knight
+			case 3://b bushop
+			case 4://b rook
+			case 5://b queen
+			case 6://b king
+			case 7://w pawn
+			case 8://w knight
+			case 9://w bushop
+			case 10://w rook
+			case 11://w queen
+			case 12://w king
+		}
+	}
+}
+
+std::vector<boardstate*> cpuSearch(const boardstate* currentBoardstate){
+	auto searchDone = cpuSearchR(currentBoardstate, 1);
+	if(searchDone){
+		return(searchDone.value());
+	}
+	return(std::vector<boardstate*>());
+}
+
 void Search::go(){
+	//so basically the stratagy here is to do a depth 1 or 2 search on the cpu, and then send those boards to OpenCL to do the following depth of nodes in parelel.
+	std::vector<boardstate*> boardstates;//specifically boardstate[32]
+	
+	
 	typedef struct {int* bar;} Foo;
 
 	auto program2Kernel = cl::KernelFunctor<>(vectorAddProgram, "updateGlobal");
