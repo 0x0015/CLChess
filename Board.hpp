@@ -23,5 +23,6 @@ public:
 	unsigned int fullmoveCounter;
 	Board();
 	Board(std::string fen);
+	void fromFen(std::string fen);
 	std::string toFen();
 };

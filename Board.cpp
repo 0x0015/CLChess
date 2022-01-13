@@ -16,12 +16,13 @@ std::vector<std::string> strSplit(std::string& base, std::string spl){
 	return(output);
 }
 
-Board::Board(std::string fromFen){
+void Board::fromFen(std::string fromFen){
 	std::vector<std::string> fenComponents = strSplit(fromFen, " ");
 	if(fenComponents.size() < 6){
 		std::cerr<<"Error: invalid fen string: "<<fromFen<<std::endl;
 		return;
 	}
+	Position = {0};
 	int usedBoards = 0;
 	std::pair<uint8_t, uint8_t> pos = std::pair<uint8_t, uint8_t>(0,0);
 	for(int i=0;i<fenComponents[0].length();i++){//piece placement
@@ -71,6 +72,10 @@ Board::Board(std::string fromFen){
 
 	halfmoveClock = std::stoi(fenComponents[4]);//halfmove clock
 	fullmoveCounter = std::stoi(fenComponents[5]);//fullmove counter
+}
+
+Board::Board(std::string fen){
+	fromFen(fen);
 }
 
 std::string Board::toFen(){

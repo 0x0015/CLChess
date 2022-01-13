@@ -25,7 +25,31 @@ void UCI::parse(std::string in){
 	}else if(strEqL(in, "position")){
 
 	}else if(strEqL(in, "go")){
+		if(in.find("searchmoves")){
 
+		}else if(in.find("ponder")){
+
+		}else if(in.find("wtime")){
+
+		}else if(in.find("btime")){
+
+		}else if(in.find("winc")){
+
+		}else if(in.find("binc")){
+
+		}else if(in.find("movestogo")){
+			
+		}else if(in.find("depth")){
+
+		}else if(in.find("nodes")){
+
+		}else if(in.find("mate")){
+
+		}else if(in.find("movetime")){
+
+		}else if(in.find("infinite")){
+
+		}
 	}else if(in == "stop"){
 
 	}else if(in == "ponderhit"){

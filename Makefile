@@ -1,7 +1,9 @@
 OBJS	= main.cpp.o\
+	  Main.cpp.o \
 	  UCI.cpp.o \
 	  Board.cpp.o \
 	  Move.cpp.o \
+	  Search.cpp.o \
 	  SimpleCppTextFileHandler/file.cpp.o \
 	  SimpleCppTextFileHandler/fileManipulation.cpp.o \
 	  SimpleCppTextFileHandler/getExecutablePath.cpp.o 
