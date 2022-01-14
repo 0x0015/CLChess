@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "SimpleCppTextFileHandler/file.hpp"
 #include "Search.hpp"
+#include "Main.hpp"
 
 Search::Search(){
 	cl_int err;
@@ -21,13 +22,13 @@ Search::Search(){
 
 	if(plat() == 0){
 		std::cerr<<"No OpenCL 3.0 platform found."<<std::endl;
-		return(-1);
+		return;
 	}
 
 	cl::Platform newP = cl::Platform::setDefault(plat);
 	if(newP != plat){
 		std::cerr<<"Error setting default platform."<<std::endl;
-		return(-1);
+		return;
 	}
 
 	kernel1 = readFile("kernel1.cl");
@@ -44,7 +45,7 @@ Search::Search(){
 		for(auto& pair : buildInfo){
 			std::cerr<<pair.second<<std::endl;
 		}
-		return(1);
+		return;
 	}
 }
 
@@ -52,89 +53,116 @@ Search::~Search(){
 
 }
 
-uint8_t checkSquareEmpty(const boardstate* currentBoardstate, uint8_t xpos, uint8_t ypos){//0 = true, 1 = black, 2 = white, 3 = off the board on x axes, 4 = off the board on y axes
-	if(xpos > 8 || xpos < 1){
-		return(3);
-	}
-	if(ypos > 8 || ypos < 1){
-		return(4);
-	}
-	for(int i=0;i<32;i++){
-		if(currentBoardstate[i].xpos == xpos && currentBoardstate[i].ypos == ypos)
-			if(currentBoardstate[i].pieceType > 0 && currentBoardstate[i].pieceType <= 6){
-				return(1);
-			}else if(currentBoardstate[i].pieceType >= 7){
-				return(2);
-			}
-	}
-	return(0);
+bool isValidPosition(uint8_t xpos, uint8_t ypos){
+	return(1<=xpos && xpos <= 8 && 1 <= ypos && ypos <= 8);
 }
 
-boardstate* copyBoardstate(const baordstate* currentBoardstate){
-	boardstate* newBoardstate = new boardstate[32];
-	std::memcpy(newBoardstate, currentBoardstate, sizeof(boardstate) * 32);
+uint8_t* copyBoardstate(const uint8_t* currentBoardstate){
+	uint8_t* newBoardstate = new uint8_t[32];
+	std::memcpy(newBoardstate, currentBoardstate, 32);
 	return(newBoardstate);
 }
 
-std::optional<std::vector<boardstate*>> cpuSearchR(const boardstate* currentBoardstate, unsigned int currentSearchDepth){//Can't be used for an actual search due to it saving boardstates in memory
-	std::vector<boardstate*> output;
+std::vector<uint8_t*> Search::cpuSearchR(const uint8_t* currentBoardstate, unsigned int currentSearchDepth, bool bmove){//Can't be used for an actual search due to it saving boardstates in memory
+	std::vector<uint8_t*> output;
 	if(currentSearchDepth > maxCPUSearch){
 		return(output);
 	}
-	for(int i=0;i<32;i++){
-		uint8_t pieceType = currentBoardstate[i].pieceType;
-		if(pieceType == 0){
-			continue;
-		}
-		uint8_t xpos = currentBoardstate[i].xpos;
-		uint8_t ypos = currentBoardstate[i].ypos;
-		switch(pieceType){
-			case 1:{//b pawn
-				if(checkSquareEmpty(currentBoardstate, xpos, ypos+1) == 0){
-					{
-						boardstate* tempBoardstate = copyBoardstate(currentBoardstate);
-						tempBoardstate[i].ypos++;
-						output.push_back(tempBoardstate);
+	for(uint8_t x = 1;x<=8;x++){
+		for(uint8_t y=1;y<=8;y++){
+			uint8_t pieceType = getBoardPiece(currentBoardstate, x, y);
+			if(pieceType == 0){
+				continue;
+			}
+			if(bmove){
+				switch(pieceType){
+					case 1:{//b pawn
+						if(isValidPosition(x, y-1) && getBoardPiece(currentBoardstate, x, y-1) == 0){
+							{
+								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+								setBoardPiece(tempBoardstate, x, y, 0);
+								setBoardPiece(tempBoardstate, x, y-1, 1);
+								output.push_back(tempBoardstate);
+							}
+							if(isValidPosition(x, y-1) && getBoardPiece(currentBoardstate, x, y-2) == 0){
+								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+								setBoardPiece(tempBoardstate, x, y, 0);
+								setBoardPiece(tempBoardstate, x, y-2, 1);
+								output.push_back(tempBoardstate);
+							}
+						}
+						if(isValidPosition(x-1, y-1) && getBoardPiece(currentBoardstate, x-1, y-1) >= 7){	
+								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+								setBoardPiece(tempBoardstate, x, y, 0);
+								setBoardPiece(tempBoardstate, x-1, y-1, 1);
+								output.push_back(tempBoardstate);
+						}
+						if(isValidPosition(x+1, y-1) && getBoardPiece(currentBoardstate, x+1, y-1) >= 7){	
+								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+								setBoardPiece(tempBoardstate, x, y, 0);
+								setBoardPiece(tempBoardstate, x+1, y-1, 1);
+								output.push_back(tempBoardstate);
+						}
+						//not worrying about enpassant right now
+						break;
 					}
-					if(checkSquareEmpty(currentBoardstate, xpos, ypos+2) == 0){
-						boardstate* tempBoardstate = copyBoardstate(currentBoardstate);
-						tempBoardstate[i].ypos+=2;
-						output.push_back(tempBoardstate);
+					case 2:{//b knight
+						break;
+					}
+					
+					case 3:{//b bushop
+						break;
+					}
+					case 4:{//b rook
+						break;
+					}
+					case 5:{//b queen
+						break;
+					}
+					case 6:{//b king
+						break;
 					}
 				}
-				if(checkSquareEmpty(currentBoardstate, xpos+1, ypos
+			}else{
+				switch(pieceType){
+					case 7:{//w pawn 
+						break;
+					}   
+					case 8:{//w knight
+						break;
+					}   
+					case 9:{//w bushop
+						break;
+					}   
+					case 10:{//w rook
+						break;
+					}   
+					case 11:{//w queen
+						break;
+					}   
+					case 12:{//w king
+						break;
+					}   
+				}
 			}
-			case 2://b knight
-			case 3://b bushop
-			case 4://b rook
-			case 5://b queen
-			case 6://b king
-			case 7://w pawn
-			case 8://w knight
-			case 9://w bushop
-			case 10://w rook
-			case 11://w queen
-			case 12://w king
+			
 		}
 	}
+	return(output);
 }
 
-std::vector<boardstate*> cpuSearch(const boardstate* currentBoardstate){
-	auto searchDone = cpuSearchR(currentBoardstate, 1);
-	if(searchDone){
-		return(searchDone.value());
-	}
-	return(std::vector<boardstate*>());
+std::vector<uint8_t*> Search::cpuSearch(){
+	return(cpuSearchR(Main::gameBoard.Position, 1, Main::gameBoard.bMove));
 }
 
 void Search::go(){
 	//so basically the stratagy here is to do a depth 1 or 2 search on the cpu, and then send those boards to OpenCL to do the following depth of nodes in parelel.
-	std::vector<boardstate*> boardstates;//specifically boardstate[32]
+	std::vector<uint8_t*> boardstates;//specifically boardstate[32]
 	
 	
 	typedef struct {int* bar;} Foo;
 
-	auto program2Kernel = cl::KernelFunctor<>(vectorAddProgram, "updateGlobal");
+	auto program2Kernel = cl::KernelFunctor<>(*SearchProgram, "updateGlobal");
 	program2Kernel(cl::EnqueueArgs(cl::NDRange(1)));//calling opencl func updateGlobal, on one instance(eg. not parelel)
 
 	auto anSVMInt = cl::allocate_svm<int, cl::SVMTraitCoarse<>>();
@@ -152,7 +180,7 @@ void Search::go(){
 
 	cl::DeviceCommandQueue defaultDeviceQueue = cl::DeviceCommandQueue::makeDefault(cl::Context::getDefault(), cl::Device::getDefault());
 
-	auto vectorAddKernel = cl::KernelFunctor<decltype(fooPointer)&, int*, cl::coarse_svm_vector<int>&, cl::Buffer, int, cl::Pipe&, cl::DeviceCommandQueue>(vectorAddProgram, "vectorAdd");
+	auto vectorAddKernel = cl::KernelFunctor<decltype(fooPointer)&, int*, cl::coarse_svm_vector<int>&, cl::Buffer, int, cl::Pipe&, cl::DeviceCommandQueue>(*SearchProgram, "vectorAdd");
 
 	vectorAddKernel.setSVMPointers(anSVMInt);//Ensure this is available even though it wasn't a parameter
 
@@ -175,5 +203,4 @@ void Search::go(){
 		std::cout<<"\t"<<output[i]<<"\n";
 	}
 	std::cout<<std::endl;
-	return(0);
 }

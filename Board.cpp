@@ -1,5 +1,30 @@
 #include "Board.hpp"
 
+uint8_t get_4bits(const unsigned char *arr, size_t index) {
+    return arr[index >> 1] >> ((index & 1) << 2);
+}
+
+void set_4bits(unsigned char *arr, size_t index, int value) {
+    arr[index >> 1] &= ~ 0x0F << ((index & 1) << 2);
+    arr[index >> 1] |= (value & 0x0F) << ((index & 1) << 2);
+}
+
+uint8_t getBoardPiece(const uint8_t* board, uint8_t xpos, uint8_t ypos){
+	return(get_4bits(board, (xpos*ypos)-1));
+}
+
+void setBoardPiece(uint8_t* board, uint8_t xpos, uint8_t ypos, uint8_t value){
+	set_4bits(board, (xpos*ypos)-1, value);
+}
+
+uint8_t Board::getPiece(uint8_t xpos, uint8_t ypos){
+	return(getBoardPiece(Position, xpos, ypos));
+}
+
+void Board::setPiece(uint8_t xpos, uint8_t ypos, uint8_t value){
+	setBoardPiece(Position, xpos, ypos, value);
+}
+
 Board::Board(){
 
 }
@@ -22,18 +47,19 @@ void Board::fromFen(std::string fromFen){
 		std::cerr<<"Error: invalid fen string: "<<fromFen<<std::endl;
 		return;
 	}
-	Position = {0};
+	for(int i=0;i<4;i++){
+		((uint64_t*)Position)[i] = 0;//sets all bytes of position to 0(divides 32 bytes into 4 uint64_t)
+	}
+	//Position = {0};
 	int usedBoards = 0;
-	std::pair<uint8_t, uint8_t> pos = std::pair<uint8_t, uint8_t>(0,0);
+	std::pair<uint8_t, uint8_t> pos = std::pair<uint8_t, uint8_t>(1,1);
 	for(int i=0;i<fenComponents[0].length();i++){//piece placement
 		std::string character = fenComponents[0].substr(i, 1);
 		if(pieceTypes.contains(character)){
-			boardstate newBoard = {.pieceType = pieceTypes[character], .xpos = pos.first, .ypos = pos.second};
-			Position[usedBoards] = newBoard;
-			usedBoards++;
+			setPiece(pos.first, pos.second, pieceTypes[character]);
 			pos.first++;
 		}else if(character == "/"){
-			pos.first = 0;
+			pos.first = 1;
 			pos.second++;
 		}else if(std::isdigit(character[0])){
 			pos.first+=std::stoi(character);
