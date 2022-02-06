@@ -54,8 +54,8 @@ static inline U64 get_random_U64(){
 
 void print_bitboard(U64 bitboard);
 
-U64 bishop_relevant_occupancies[64];
-U64 rook_relevant_occupancies[64];
+extern U64 bishop_relevant_occupancies[64];
+extern U64 rook_relevant_occupancies[64];
 
 U64 set_occupancy(int index, U64 mask);
 
@@ -68,8 +68,8 @@ const extern U64 king_mask[64];
 const extern int rook_relevent_occupancy_count[64];
 const extern int bishop_relevent_occupancy_count[64];
 
-U64 rook_attacks[64][4096];
-U64 bishop_attacks[64][512];
+extern U64 rook_attacks[64][4096];
+extern U64 bishop_attacks[64][512];
 
 const extern U64 rook_magic_numbers[64];
 const extern U64 bishop_magic_numbers[64];

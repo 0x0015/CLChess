@@ -5,6 +5,23 @@
 #include <stdio.h>
 #include "bitboard.h"
 
+
+U64 bishop_relevant_occupancies[64];
+U64 rook_relevant_occupancies[64];
+
+const U64 knight_mask[64];
+const U64 pawn_mask[2][64];
+const U64 king_mask[64];
+
+const int rook_relevent_occupancy_count[64];
+const int bishop_relevent_occupancy_count[64];
+
+U64 rook_attacks[64][4096];
+U64 bishop_attacks[64][512];
+
+const U64 rook_magic_numbers[64];
+const U64 bishop_magic_numbers[64];
+
 void print_bitboard(U64 bitboard){
 
     int rank = 8;
