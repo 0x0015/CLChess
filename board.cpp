@@ -135,9 +135,6 @@ int is_threefold_repetition(Board *board){
     int repetitionlimit = 2;
 
     for (int position = 0; position <= board->zobrist_history_length; position++){
-        if (position == (board->zobrist_history_search_index + 1))
-            repetitionlimit = 1;
-
         int repetitions = 0;
         for (int compare = position+1; compare <= board->zobrist_history_length; compare++){
             if (board->zobrist_history[compare] == board->zobrist_history[position]){
@@ -502,177 +499,115 @@ const int castling_right_table[64] = {
         13, 15, 15, 15, 12, 15, 15, 14
 };
 
-void refresh_weak_squares(Board *board){
-    U64 *wb = &board->unprotectedPieces[white];
-    U64 *bb = &board->unprotectedPieces[black];
+int make_move(int move, Board *board){
+    copy_board();
 
-    *wb = 0ULL;
-    *bb = 0ULL;
+    board->ply++;
 
-    for (int pt = 0; pt < 12; ++pt) {
+    int ptype = getpiece(move);
+    int source = getsource(move);
+    int target = gettarget(move);
+    int capture = getcapture(move);
 
-        U64 bitboard = board->bitboards[pt];
-        if (!bitboard) continue;
+    //if move is a king move, refresh the accumulator;
+    if (ptype == K || ptype == k){
+        pop_bit(board->bitboards[ptype], source);
+        set_bit(board->bitboards[ptype], target);
+    } else {
+        pop_bit(board->bitboards[ptype], source);
+        set_bit(board->bitboards[ptype], target);
+    }
 
-        int bitcount = count_bits(bitboard);
+    if (capture){
+        if (getenpessant(move)){
+            if (board->side == white){
+                pop_bit(board->bitboards[p], target+8);
+            } else {
+                pop_bit(board->bitboards[P], target-8);
+            }
+        } else {
+            if (board->side == white){
+                for (int piece = p; piece <= k; piece++) {
+                    if (get_bit(board->bitboards[piece], target)) {
 
-        for (int i = 0; i < bitcount; ++i) {
-            int square = bsf(bitboard);
+                        pop_bit(board->bitboards[piece], target);
 
-            if (pt == P)
-                *wb |= pawn_mask[white][square];
-            if (pt == N)
-                *wb |= knight_mask[square];
-            if (pt == B)
-                *wb |= get_bishop_attacks(square, board->occupancies[both]);
-            if (pt == R)
-                *wb |= get_rook_attacks(square, board->occupancies[both]);
-            if (pt == K)
-                *wb |= king_mask[square];
-            if (pt == Q)
-                *wb |= get_bishop_attacks(square, board->occupancies[both]) | get_rook_attacks(square, board->occupancies[both]);
-            if (pt == p)
-                *bb |= pawn_mask[black][square];
-            if (pt == n)
-                *bb |= knight_mask[square];
-            if (pt == b)
-                *bb |= get_bishop_attacks(square, board->occupancies[both]);
-            if (pt == r)
-                *bb |= get_rook_attacks(square, board->occupancies[both]);
-            if (pt == k)
-                *bb |= king_mask[square];
-            if (pt == q)
-                *bb |= get_rook_attacks(square, board->occupancies[both]) | get_bishop_attacks(square, board->occupancies[both]);
+                        break;
+                    }
+                }
+            } else {
+                for (int piece = P; piece <= K; piece++) {
+                    if (get_bit(board->bitboards[piece], target)) {
 
-            pop_bit(bitboard, square);
+                        pop_bit(board->bitboards[piece], target);
+
+                        break;
+                    }
+                }
+            }
         }
     }
 
-    *wb = (~*wb) & board->occupancies[white];
-    *bb = (~*bb) & board->occupancies[black];
-}
-
-int make_move(int move, int flag, int notquinode, Board *board){
-
-    if (flag == all_moves){
-        copy_board();
-
-        board->ply++;
-
-        int ptype = getpiece(move);
-        int source = getsource(move);
-        int target = gettarget(move);
-        int capture = getcapture(move);
-
-        //if move is a king move, refresh the accumulator;
-        if (ptype == K || ptype == k){
-            pop_bit(board->bitboards[ptype], source);
-            set_bit(board->bitboards[ptype], target);
-        } else {
-            pop_bit(board->bitboards[ptype], source);
-            set_bit(board->bitboards[ptype], target);
-        }
-
-        if (capture){
-            if (getenpessant(move)){
-                if (board->side == white){
-                    pop_bit(board->bitboards[p], target+8);
-                } else {
-                    pop_bit(board->bitboards[P], target-8);
-                }
-            } else {
-                if (board->side == white){
-                    for (int piece = p; piece <= k; piece++) {
-                        if (get_bit(board->bitboards[piece], target)) {
-
-                            pop_bit(board->bitboards[piece], target);
-
-                            break;
-                        }
-                    }
-                } else {
-                    for (int piece = P; piece <= K; piece++) {
-                        if (get_bit(board->bitboards[piece], target)) {
-
-                            pop_bit(board->bitboards[piece], target);
-
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        if (getdouble(move)){
-            board->enpessant = (board->side == white) ? (target + 8) : (target - 8);
-        } else {
-            board->enpessant = no_sq;
-        }
-
-        if (getcastle(move)){
-            if (board->side == white){
-                if (target == 62){
-                    pop_bit(board->bitboards[R], 63);
-                    set_bit(board->bitboards[R], 61);
-                } else if (target == 58){
-                    pop_bit(board->bitboards[R], 56);
-                    set_bit(board->bitboards[R], 59);
-                }
-            } else {
-                if (target == 6){
-                    pop_bit(board->bitboards[r], 7);
-                    set_bit(board->bitboards[r], 5);
-                } else if (target == 2){
-                    pop_bit(board->bitboards[r], 0);
-                    set_bit(board->bitboards[r], 3);
-                }
-            }
-        }
-
-        int promoted = getpromoted(move);
-        if (promoted){
-            pop_bit(board->bitboards[ptype], target);
-            set_bit(board->bitboards[promoted], target);
-        }
-
-        update_occupancies(board);
-
-        if (board->side == white){
-            if (is_square_attacked(bsf(board->bitboards[K]), black, board)){
-                take_back();
-                return 0;
-            }
-        } else {
-            if (is_square_attacked(bsf(board->bitboards[k]), white, board)){
-                take_back();
-                return 0;
-            }
-        }
-
-        board->castle &= castling_right_table[source];
-        board->castle &= castling_right_table[target];
-
-        board->side ^= 1;
-
-        if ((ptype == P) || (ptype == p) || (board_copy.castle != board->castle) || capture){
-            memset(board->zobrist_history, 0, sizeof(board->zobrist_history));
-            board->zobrist_history_length = 0;
-        }
-
-        //UPDATE ZOBRIST HISTORY
-        board->current_zobrist_key = update_zobrist_key(board);
-        board->zobrist_history[board->zobrist_history_length] = board->current_zobrist_key;
-        board->zobrist_history_length++;
+    if (getdouble(move)){
+        board->enpessant = (board->side == white) ? (target + 8) : (target - 8);
     } else {
-        if (getcapture(move) || is_move_direct_check(move, board) || getpromoted(move)){
-            return make_move(move, all_moves, notquinode, board);
+        board->enpessant = no_sq;
+    }
+
+    if (getcastle(move)){
+        if (board->side == white){
+            if (target == 62){
+                pop_bit(board->bitboards[R], 63);
+                set_bit(board->bitboards[R], 61);
+            } else if (target == 58){
+                pop_bit(board->bitboards[R], 56);
+                set_bit(board->bitboards[R], 59);
+            }
         } else {
+            if (target == 6){
+                pop_bit(board->bitboards[r], 7);
+                set_bit(board->bitboards[r], 5);
+            } else if (target == 2){
+                pop_bit(board->bitboards[r], 0);
+                set_bit(board->bitboards[r], 3);
+            }
+        }
+    }
+
+    int promoted = getpromoted(move);
+    if (promoted){
+        pop_bit(board->bitboards[ptype], target);
+        set_bit(board->bitboards[promoted], target);
+    }
+
+    update_occupancies(board);
+
+    if (board->side == white){
+        if (is_square_attacked(bsf(board->bitboards[K]), black, board)){
+            take_back();
+            return 0;
+        }
+    } else {
+        if (is_square_attacked(bsf(board->bitboards[k]), white, board)){
+            take_back();
             return 0;
         }
     }
 
-    if (notquinode)
-        refresh_weak_squares(board);
+    board->castle &= castling_right_table[source];
+    board->castle &= castling_right_table[target];
+
+    board->side ^= 1;
+
+    if ((ptype == P) || (ptype == p) || (board_copy.castle != board->castle) || capture){
+        memset(board->zobrist_history, 0, sizeof(board->zobrist_history));
+        board->zobrist_history_length = 0;
+    }
+
+    //UPDATE ZOBRIST HISTORY
+    board->current_zobrist_key = update_zobrist_key(board);
+    board->zobrist_history[board->zobrist_history_length] = board->current_zobrist_key;
+    board->zobrist_history_length++;
 
     return 1;
 }
@@ -685,7 +620,7 @@ void generate_only_legal_moves(MoveList *moves, Board *board){
 
     copy_board();
     for (int i = 0; i < tmp.count; ++i) {
-        if (make_move(tmp.moves[i], all_moves, 1, board)) {
+        if (make_move(tmp.moves[i],  board)) {
             moves->moves[moves->count] = tmp.moves[i];
             moves->count++;
         }
@@ -957,5 +892,4 @@ void parse_fen(char *fen, Board *board)
 
     update_occupancies(board);
     board->current_zobrist_key = generate_zobrist_key(board);
-    refresh_weak_squares(board);
 }
