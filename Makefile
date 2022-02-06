@@ -1,7 +1,8 @@
 OBJS	= main.cpp.o\
 	  Main.cpp.o \
 	  UCI.cpp.o \
-	  Board.cpp.o \
+	  board.c.o \
+	  bitboard.c.o \
 	  Move.cpp.o \
 	  Search.cpp.o \
 	  SimpleCppTextFileHandler/file.cpp.o \
@@ -10,8 +11,8 @@ OBJS	= main.cpp.o\
 
 OUT	= main
 CXX	= g++
-CC      = gcc
-BUILD_CXX_FLAGS	 = -Wall -std=c++20 -g
+CC = gcc
+BUILD_CXX_FLAGS	 = -Wall -std=c++17 -g
 BULID_CC_FLAGS   =
 LINK_OPTS	 = -lOpenCL -lstdc++fs
 
@@ -23,7 +24,7 @@ all: $(OBJS)
 	$(CXX) $< $(BUILD_CXX_FLAGS) $(LINK_OPTS) -g -c -o $@
 
 %.c.o: %.c
-	$(CXX) $< $(BUILD_CXX_FLAGS) $(LINK_OPTS) -g -c -o $@
+	$(CC) $< $(BUILD_CXX_FLAGS) $(LINK_OPTS) -g -c -o $@
 
 clean:
 	rm -f $(OBJS) $(OUT)

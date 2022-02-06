@@ -1,5 +1,5 @@
 #define CL_HPP_ENABLE_EXCEPTIONS
-#include <CL/opencl.hpp>
+#include <CL/cl2.hpp>
 #include <iostream>
 #include <vector>
 #include <memory>
@@ -63,169 +63,168 @@ uint8_t* copyBoardstate(const uint8_t* currentBoardstate){
 	return(newBoardstate);
 }
 
-std::vector<uint8_t*> Search::cpuSearchR(const uint8_t* currentBoardstate, unsigned int currentSearchDepth, bool bmove){//Can't be used for an actual search due to it saving boardstates in memory
-	std::vector<uint8_t*> output;
-	if(currentSearchDepth > maxCPUSearch){
-		return(output);
-	}
-	for(uint8_t x = 1;x<=8;x++){
-		for(uint8_t y=1;y<=8;y++){
-			uint8_t pieceType = getBoardPiece(currentBoardstate, x, y);
-			if(pieceType == 0){
-				continue;
-			}
-			if(bmove){
-				switch(pieceType){
-					case 1:{//b pawn
-						if(isValidPosition(x, y-1) && getBoardPiece(currentBoardstate, x, y-1) == 0){
-							{
-								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
-								setBoardPiece(tempBoardstate, x, y, 0);
-								setBoardPiece(tempBoardstate, x, y-1, 1);
-								output.push_back(tempBoardstate);
-							}
-							if(isValidPosition(x, y-1) && getBoardPiece(currentBoardstate, x, y-2) == 0){
-								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
-								setBoardPiece(tempBoardstate, x, y, 0);
-								setBoardPiece(tempBoardstate, x, y-2, 1);
-								output.push_back(tempBoardstate);
-							}
-						}
-						if(isValidPosition(x-1, y-1) && getBoardPiece(currentBoardstate, x-1, y-1) >= 7){	
-								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
-								setBoardPiece(tempBoardstate, x, y, 0);
-								setBoardPiece(tempBoardstate, x-1, y-1, 1);
-								output.push_back(tempBoardstate);
-						}
-						if(isValidPosition(x+1, y-1) && getBoardPiece(currentBoardstate, x+1, y-1) >= 7){	
-								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
-								setBoardPiece(tempBoardstate, x, y, 0);
-								setBoardPiece(tempBoardstate, x+1, y-1, 1);
-								output.push_back(tempBoardstate);
-						}
-						//not worrying about enpassant right now
-						break;
-					}
-					case 2:{//b knight
-						if(isValidPosition(x+2, y+1)){
-							uint8_t currentPiece = getBoardPiece(currentBoardstate, x+2, y+1);
-							if(currentBoardstate == 0 || currentBoardstate >= 7){
-								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
-								setBoardPiece(tempBoardstate, x, y, 0);
-								setBoardPiece(tempBoardstate, x+2, y+1, 2);
-								output.push_back(tempBoardstate);
-							}
-						}
-						if(isValidPosition(x+2, y-1)){
-							uint8_t currentPiece = getBoardPiece(currentBoardstate, x+2, y-1);
-							if(currentBoardstate == 0 || currentBoardstate >= 7){
-								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
-								setBoardPiece(tempBoardstate, x, y, 0);
-								setBoardPiece(tempBoardstate, x+2, y-1, 2);
-								output.push_back(tempBoardstate);
-							}
-						}
-						if(isValidPosition(x-2, y+1)){
-							uint8_t currentPiece = getBoardPiece(currentBoardstate, x-2, y+1);
-							if(currentBoardstate == 0 || currentBoardstate >= 7){
-								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
-								setBoardPiece(tempBoardstate, x, y, 0);
-								setBoardPiece(tempBoardstate, x-2, y+1, 2);
-								output.push_back(tempBoardstate);
-							}
-						}
-						if(isValidPosition(x-2, y-1)){
-							uint8_t currentPiece = getBoardPiece(currentBoardstate, x-2, y-1);
-							if(currentBoardstate == 0 || currentBoardstate >= 7){
-								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
-								setBoardPiece(tempBoardstate, x, y, 0);
-								setBoardPiece(tempBoardstate, x-2, y-1, 2);
-								output.push_back(tempBoardstate);
-							}
-						}
-						if(isValidPosition(x+1, y+2)){
-							uint8_t currentPiece = getBoardPiece(currentBoardstate, x+1, y+2);
-							if(currentBoardstate == 0 || currentBoardstate >= 7){
-								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
-								setBoardPiece(tempBoardstate, x, y, 0);
-								setBoardPiece(tempBoardstate, x+1, y+2, 2);
-								output.push_back(tempBoardstate);
-							}
-						}
-						if(isValidPosition(x+1, y-2)){
-							uint8_t currentPiece = getBoardPiece(currentBoardstate, x+1, y-2);
-							if(currentBoardstate == 0 || currentBoardstate >= 7){
-								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
-								setBoardPiece(tempBoardstate, x, y, 0);
-								setBoardPiece(tempBoardstate, x+1, y-2, 2);
-								output.push_back(tempBoardstate);
-							}
-						}
-						if(isValidPosition(x-1, y+2)){
-							uint8_t currentPiece = getBoardPiece(currentBoardstate, x-1, y+2);
-							if(currentBoardstate == 0 || currentBoardstate >= 7){
-								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
-								setBoardPiece(tempBoardstate, x, y, 0);
-								setBoardPiece(tempBoardstate, x-1, y+2, 2);
-								output.push_back(tempBoardstate);
-							}
-						}
-						if(isValidPosition(x-1, y-2)){
-							uint8_t currentPiece = getBoardPiece(currentBoardstate, x-1, y-2);
-							if(currentBoardstate == 0 || currentBoardstate >= 7){
-								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
-								setBoardPiece(tempBoardstate, x, y, 0);
-								setBoardPiece(tempBoardstate, x-1, y-2, 2);
-								output.push_back(tempBoardstate);
-							}
-						}
-						break;
-					}
-					case 3:{//b bushop
-						
-						break;
-					}
-					case 4:{//b rook
-						
-						break;
-					}
-					case 5:{//b queen
-						break;
-					}
-					case 6:{//b king
-						break;
-					}
-				}
-			}else{
-				switch(pieceType){
-					case 7:{//w pawn 
-						break;
-					}   
-					case 8:{//w knight
-						break;
-					}   
-					case 9:{//w bushop
-						break;
-					}   
-					case 10:{//w rook
-						break;
-					}   
-					case 11:{//w queen
-						break;
-					}   
-					case 12:{//w king
-						break;
-					}   
-				}
-			}
-			
-		}
-	}
-	return(output);
-}
+//std::vector<uint8_t*> Search::cpuSearchR(const uint8_t* currentBoardstate, unsigned int currentSearchDepth, bool bmove){//Can't be used for an actual search due to it saving boardstates in memory
+//	std::vector<uint8_t*> output;
+//	if(currentSearchDepth > maxCPUSearch){
+//		return(output);
+//	}
+//	for(uint8_t x = 1;x<=8;x++){
+//		for(uint8_t y=1;y<=8;y++){
+//			uint8_t pieceType = getBoardPiece(currentBoardstate, x, y);
+//			if(pieceType == 0){
+//				continue;
+//			}
+//			if(bmove){
+//				switch(pieceType){
+//					case 1:{//b pawn
+//						if(isValidPosition(x, y-1) && getBoardPiece(currentBoardstate, x, y-1) == 0){
+//							{
+//								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+//								setBoardPiece(tempBoardstate, x, y, 0);
+//								setBoardPiece(tempBoardstate, x, y-1, 1);
+//								output.push_back(tempBoardstate);
+//							}
+//							if(isValidPosition(x, y-1) && getBoardPiece(currentBoardstate, x, y-2) == 0){
+//								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+//								setBoardPiece(tempBoardstate, x, y, 0);
+//								setBoardPiece(tempBoardstate, x, y-2, 1);
+//								output.push_back(tempBoardstate);
+//							}
+//						}
+//						if(isValidPosition(x-1, y-1) && getBoardPiece(currentBoardstate, x-1, y-1) >= 7){
+//								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+//								setBoardPiece(tempBoardstate, x, y, 0);
+//								setBoardPiece(tempBoardstate, x-1, y-1, 1);
+//								output.push_back(tempBoardstate);
+//						}
+//						if(isValidPosition(x+1, y-1) && getBoardPiece(currentBoardstate, x+1, y-1) >= 7){
+//								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+//								setBoardPiece(tempBoardstate, x, y, 0);
+//								setBoardPiece(tempBoardstate, x+1, y-1, 1);
+//								output.push_back(tempBoardstate);
+//						}
+//						//not worrying about enpassant right now
+//						break;
+//					}
+//					case 2:{//b knight
+//						if(isValidPosition(x+2, y+1)){
+//							uint8_t currentPiece = getBoardPiece(currentBoardstate, x+2, y+1);
+//							if(currentBoardstate == 0 || currentBoardstate >= 7){
+//								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+//								setBoardPiece(tempBoardstate, x, y, 0);
+//								setBoardPiece(tempBoardstate, x+2, y+1, 2);
+//								output.push_back(tempBoardstate);
+//							}
+//						}
+//						if(isValidPosition(x+2, y-1)){
+//							uint8_t currentPiece = getBoardPiece(currentBoardstate, x+2, y-1);
+//							if(currentBoardstate == 0 || currentBoardstate >= 7){
+//								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+//								setBoardPiece(tempBoardstate, x, y, 0);
+//								setBoardPiece(tempBoardstate, x+2, y-1, 2);
+//								output.push_back(tempBoardstate);
+//							}
+//						}
+//						if(isValidPosition(x-2, y+1)){
+//							uint8_t currentPiece = getBoardPiece(currentBoardstate, x-2, y+1);
+//							if(currentBoardstate == 0 || currentBoardstate >= 7){
+//								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+//								setBoardPiece(tempBoardstate, x, y, 0);
+//								setBoardPiece(tempBoardstate, x-2, y+1, 2);
+//								output.push_back(tempBoardstate);
+//							}
+//						}
+//						if(isValidPosition(x-2, y-1)){
+//							uint8_t currentPiece = getBoardPiece(currentBoardstate, x-2, y-1);
+//							if(currentBoardstate == 0 || currentBoardstate >= 7){
+//								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+//								setBoardPiece(tempBoardstate, x, y, 0);
+//								setBoardPiece(tempBoardstate, x-2, y-1, 2);
+//								output.push_back(tempBoardstate);
+//							}
+//						}
+//						if(isValidPosition(x+1, y+2)){
+//							uint8_t currentPiece = getBoardPiece(currentBoardstate, x+1, y+2);
+//							if(currentBoardstate == 0 || currentBoardstate >= 7){
+//								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+//								setBoardPiece(tempBoardstate, x, y, 0);
+//								setBoardPiece(tempBoardstate, x+1, y+2, 2);
+//								output.push_back(tempBoardstate);
+//							}
+//						}
+//						if(isValidPosition(x+1, y-2)){
+//							uint8_t currentPiece = getBoardPiece(currentBoardstate, x+1, y-2);
+////							if(currentBoardstate == 0 || currentBoardstate >= 7){
+////								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+////								setBoardPiece(tempBoardstate, x, y, 0);
+////								setBoardPiece(tempBoardstate, x+1, y-2, 2);
+////								output.push_back(tempBoardstate);
+////							}
+//						}
+//						if(isValidPosition(x-1, y+2)){
+//							uint8_t currentPiece = getBoardPiece(currentBoardstate, x-1, y+2);
+////							if(currentBoardstate == 0 || currentBoardstate >= 7){
+////								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+////								setBoardPiece(tempBoardstate, x, y, 0);
+////								setBoardPiece(tempBoardstate, x-1, y+2, 2);
+////								output.push_back(tempBoardstate);
+////							}
+//						}
+//						if(isValidPosition(x-1, y-2)){
+//							uint8_t currentPiece = getBoardPiece(currentBoardstate, x-1, y-2);
+//							if(currentBoardstate == 0 || currentBoardstate >= 7){
+//								uint8_t* tempBoardstate = copyBoardstate(currentBoardstate);
+//								setBoardPiece(tempBoardstate, x, y, 0);
+//								setBoardPiece(tempBoardstate, x-1, y-2, 2);
+//								output.push_back(tempBoardstate);
+//							}
+//						}
+//						break;
+//					}
+//					case 3:{//b bushop
+//
+//						break;
+//					}
+//					case 4:{//b rook
+//
+//						break;
+//					}
+//					case 5:{//b queen
+//						break;
+//					}
+//					case 6:{//b king
+//						break;
+//					}
+//				}
+//			}else{
+//				switch(pieceType){
+//					case 7:{//w pawn
+//						break;
+//					}
+//					case 8:{//w knight
+//						break;
+//					}
+//					case 9:{//w bushop
+//						break;
+//					}
+//					case 10:{//w rook
+//						break;
+//					}
+//					case 11:{//w queen
+//						break;
+//					}
+//					case 12:{//w king
+//						break;
+//					}
+//				}
+//			}
+//
+//		}
+//	}
+//	return(output);
+//}
 
 std::vector<uint8_t*> Search::cpuSearch(){
-	return(cpuSearchR(Main::gameBoard.Position, 1, Main::gameBoard.bMove));
 }
 
 void Search::go(){
