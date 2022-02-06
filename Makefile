@@ -1,7 +1,7 @@
 OBJS	= main.cpp.o\
 	  Main.cpp.o \
 	  UCI.cpp.o \
-	  board.c.o \
+	  board.cpp.o \
 	  bitboard.c.o \
 	  Move.cpp.o \
 	  Search.cpp.o \

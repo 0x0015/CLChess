@@ -5,6 +5,8 @@
 #include "board.h"
 
 #include <stdio.h>
+#include <iostream>
+#include <map>
 
 const char *square_to_coordinates[] = {
         "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
@@ -772,55 +774,22 @@ int is_square_attacked(int square, int testingSide, Board *board){
     return 0;
 }
 
-//
-//int piece_values[12] = {10, 30, 32, 50, 100, 0, -10, -30, -32, -50, -100, 0};
-//
-//int get_smallest_attacker(int square, int testingSide){
-//    if ((testingSide == white) && (pawn_mask[black][square] & bitboards[P])) return P;
-//
-//    if ((testingSide == black) && (pawn_mask[white][square] & bitboards[p])) return p;
-//
-//    if (knight_mask[square] & ((testingSide == white) ? bitboards[N] : bitboards[n])) return testingSide == white ? N : n;
-//
-//    if (get_bishop_attacks(testingSide, occupancies[both]) & ((testingSide == white) ? bitboards[B] : bitboards[b])) testingSide == white ? B : b;
-//
-//    if (get_rook_attacks(testingSide, occupancies[both]) & ((testingSide == white) ? bitboards[R] : bitboards[r])) testingSide == white ? R : r;
-//
-//    if (get_queen_attacks(testingSide, occupancies[both]) & ((testingSide == white) ? bitboards[Q] : bitboards[q])) testingSide == white ? Q : q;
-//
-//    if (king_mask[square] & ((testingSide == white) ? bitboards[K] : bitboards[k])) testingSide == white ? K : k;
-//
-//    return -1;
-//}
-//
-//int static_exchange_evaluation(int move) {
-//    int exchange_eval = 0;
-//
-//    int target = get_move_target(move);
-//    int cap = piece_at(target);
-//    exchange_eval -= piece_values[cap];
-//
-//    if (get_smallest_attacker(target, side^1) != -1)
-//        exchange_eval -= piece_values[get_move_piece(move)];
-//
-//    return side == white ? exchange_eval + 2000 : (-exchange_eval) + 2000;
-//}
+std::map<char, int> char_pieces = {
+        {'P', P},
+        {'N', N},
+        {'B', B},
+        {'R', R},
+        {'Q', Q},
+        {'K', K},
+        {'p', p},
+        {'n', n},
 
-int char_pieces[] = {
-        ['P'] = P,
-        ['N'] = N,
-        ['B'] = B,
-        ['R'] = R,
-        ['Q'] = Q,
-        ['K'] = K,
-        ['p'] = p,
-        ['n'] = n,
-
-        ['b'] = b,
-        ['r'] = r,
-        ['q'] = q,
-        ['k'] = k
+        {'b', b},
+        {'r', r},
+        {'q', q},
+        {'k', k}
 };
+
 char piece_symbols[12] = {
         'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k'
 };

@@ -3,7 +3,7 @@
 //
 
 #include <stdio.h>
-#include "bitboard.h"
+#include "bitboard.hpp"
 
 
 U64 bishop_relevant_occupancies[64];

@@ -5,10 +5,9 @@
 #ifndef MBBCHESS_BOARD_H
 #define MBBCHESS_BOARD_H
 
-typedef struct Board Board;
 
 #include <string.h>
-#include "bitboard.h"
+#include "bitboard.hpp"
 
 
 #define start_position "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -40,7 +39,7 @@ typedef struct {
     U32 count;
 } MoveList;
 
-
+typedef struct Board Board;
 struct Board{
     U64 zobrist_history[101];
     int zobrist_history_length;
